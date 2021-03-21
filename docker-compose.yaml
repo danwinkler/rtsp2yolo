@@ -1,0 +1,41 @@
+# This is an example of how rstp2yolo can be integrated.
+# Uses ullaakut/rtspatt to generate a fake rtsp stream
+# Note that there won't likely be any detections given that the rtsp stream generates a test pattern
+version: "3.9"
+services:
+  main:
+    build: .
+    volumes:
+      - .:/rtsp2yolo
+    environment:
+      - RTSP_ENDPOINT=rtsp://rtsp:8554/live.sdp
+      - MESSAGE_BROKER_HOST=rabbitmq
+      - YOLO_HOST=yolo
+      - YOLO_PORT=8080
+    depends_on:
+      - yolo
+      - rabbitmq
+      - rtsp
+  rtsp:
+    image: ullaakut/rtspatt:latest
+    ports:
+      - "8554:8554"
+  yolo:
+    image: "johannestang/yolo_service:1.0-yolov4_coco"
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+  receiver:
+    build: .
+    volumes:
+      - .:/rtsp2yolo
+    entrypoint: python -u example/receiver.py
+    environment:
+      - MESSAGE_BROKER_HOST=rabbitmq
+    depends_on:
+      - rabbitmq

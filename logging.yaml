@@ -1,0 +1,15 @@
+version: 1
+# formatters:
+#   json:
+#     class: pythonjsonlogger.jsonlogger.JsonFormatter
+#     format: "%(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    stream: ext://sys.stdout
+    # formatter: json
+    level: DEBUG
+root:
+  level: DEBUG
+  handlers: [console]
+  propagate: 0
