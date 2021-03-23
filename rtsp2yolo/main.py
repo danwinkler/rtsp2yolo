@@ -4,6 +4,7 @@ import time
 import logging
 import datetime
 import logging.config
+import base64
 from threading import Lock
 
 import yaml
@@ -62,7 +63,10 @@ class CaptureDetectApplication(cli.Application):
         )
         rtsp_endpoint = local.env.get("RTSP_ENDPOINT")
         yolo_host = local.env.get("YOLO_HOST")
-        yolo_port = local.env.get("YOLO_PORT")
+        yolo_port = local.env.get("YOLO_PORT", 8080)
+        include_image = local.env.get("INCLUDE_IMAGE")
+        if include_image in [None, "", "0", "false", "False"]:
+            include_image = False
 
         yolo_endpoint = f"http://{yolo_host}:{yolo_port}/detect"
 
@@ -102,21 +106,38 @@ class CaptureDetectApplication(cli.Application):
                         )
                         continue
 
-                    body = json.dumps(
-                        {
+                    for detection in decoded_response:
+                        logging.info(f"got detection: {detection}")
+                        body = {
                             "stream": rtsp_endpoint,
                             "time": datetime.datetime.now(
                                 datetime.timezone.utc
                             ).isoformat(),
-                            "detections": decoded_response,
+                            "detection": detection,
                         }
-                    )
 
-                    con.channel.basic_publish(
-                        exchange=message_broker_exchange_name,
-                        routing_key="",
-                        body=body,
-                    )
+                        if include_image:
+                            xcenter, ycenter, width, height = detection[2]
+                            w2 = width / 2
+                            h2 = height / 2
+                            subframe = frame[
+                                max(int(ycenter - h2), 0) : int(ycenter + h2),
+                                max(int(xcenter - w2), 0) : int(xcenter + w2),
+                            ]
+
+                            enc_success, subframe_encoded = cv2.imencode(
+                                ".png", subframe
+                            )
+
+                            body["image"] = base64.b64encode(subframe_encoded).decode(
+                                "ascii"
+                            )
+
+                        con.channel.basic_publish(
+                            exchange=message_broker_exchange_name,
+                            routing_key="",
+                            body=json.dumps(body),
+                        )
 
                     time.sleep(0.5)
             finally:
