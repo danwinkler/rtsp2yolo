@@ -1,3 +1,4 @@
+import os
 import threading
 import json
 import time
@@ -23,6 +24,8 @@ class Camera:
 
     last_frame = None
     last_ready = None
+    last_good_frame_time = None
+    max_time_since_last_frame = 30
     lock = Lock()
 
     def __init__(self, rtsp_link):
@@ -39,6 +42,14 @@ class Camera:
             with self.lock:
                 try:
                     self.last_ready, self.last_frame = capture.read()
+                    if self.last_ready:
+                        self.last_good_frame_time = time.time()
+                    if (
+                        time.time() - self.last_good_frame_time
+                        > self.max_time_since_last_frame
+                    ):
+                        logging.error("Not getting frames from RTSP stream, exiting")
+                        os._exit(1)
                 except Exception:
                     logging.exception("Failed to read from rtsp stream")
         capture.release()
