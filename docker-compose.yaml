@@ -12,14 +12,19 @@ services:
       - MESSAGE_BROKER_HOST=rabbitmq
       - YOLO_HOST=yolo
       - YOLO_PORT=8080
+      - IMAGE_SAVE_PATH=/rtsp2yolo/images
     depends_on:
       - yolo
       - rabbitmq
       - rtsp
   rtsp:
     image: ullaakut/rtspatt:latest
+    environment:
+      - INPUT=/test_data/traffic-mini.mp4
     ports:
       - "8554:8554"
+    volumes:
+      - ./test_data:/test_data
   yolo:
     image: "johannestang/yolo_service:1.0-yolov4_coco"
     ports:

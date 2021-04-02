@@ -139,3 +139,6 @@ cython_debug/
 
 # Don't include vscode
 .vscode
+
+# Don't include default output image folder for testing
+images/

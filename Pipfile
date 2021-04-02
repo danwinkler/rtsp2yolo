@@ -9,6 +9,7 @@ opencv-python = "*"
 requests = "*"
 pika = "*"
 pyyaml = "*"
+Pillow = "*"
 
 [dev-packages]
 black = "==20.8b1"

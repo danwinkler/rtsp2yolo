@@ -4,4 +4,4 @@ docker run \
     --network host \
     --name rtsp2yolo_dev \
     --entrypoint=/bin/bash \
-    danielwinkler/rtsp2yolo:latest
+    rtsp2yolo_dev:latest
