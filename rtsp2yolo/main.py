@@ -26,7 +26,7 @@ class Camera:
 
     last_frame = None
     last_ready = None
-    last_good_frame_time = None
+    last_good_frame_time = 0
     max_time_since_last_frame = 30
     lock = Lock()
 
