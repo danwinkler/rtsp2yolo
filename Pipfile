@@ -5,7 +5,8 @@ name = "pypi"
 
 [packages]
 plumbum = "*"
-opencv-python = "*"
+# Included via dockerfile
+# opencv-python = "*"
 requests = "*"
 pika = "*"
 pyyaml = "*"
