@@ -18,6 +18,8 @@ from plumbum import FG, cli, local
 
 from rtsp2yolo import broker
 
+FALSEY_VALUES = [None, "", "0", "false", "False"]
+
 
 class Camera:
     """
@@ -83,13 +85,18 @@ class CaptureDetectApplication(cli.Application):
         rtsp_endpoint = local.env.get("RTSP_ENDPOINT")
         yolo_host = local.env.get("YOLO_HOST")
         yolo_port = local.env.get("YOLO_PORT", 8080)
+
+        # If specified, will save a png of the capture for any detection,
+        # with the detections included, json encoded as png metadata.
         image_save_path = local.env.get("IMAGE_SAVE_PATH")
         if image_save_path:
             image_save_path = local.path(image_save_path)
             image_save_path.mkdir()
-        threshold = float(local.env.get("THRESHOLD", 0.25))
+        threshold = local.env.get("THRESHOLD", "0.25")
+
+        # Include image specifies whether to include a cropped image in the message for a detection
         include_image = local.env.get("INCLUDE_IMAGE")
-        if include_image in [None, "", "0", "false", "False"]:
+        if include_image in FALSEY_VALUES:
             include_image = False
 
         yolo_endpoint = f"http://{yolo_host}:{yolo_port}/detect"
@@ -120,7 +127,7 @@ class CaptureDetectApplication(cli.Application):
                     response = requests.post(
                         yolo_endpoint,
                         files={"image_file": encoded},
-                        data={"threshold": "0.25"},
+                        data={"threshold": threshold},
                     )
 
                     try:
